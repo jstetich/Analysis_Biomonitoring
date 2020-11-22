@@ -1,0 +1,114 @@
+---
+title: "Generate file of Most Recent Biomonitoring Results"
+
+author:  "Curtis C. Bohlen, Casco Bay Estuary Partnership"
+date: "11/19/2020"
+output:
+  github_document:
+    toc: true
+    fig_width: 7
+    fig_height: 5
+---
+
+<img
+  src="https://www.cascobayestuary.org/wp-content/uploads/2014/04/logo_sm.jpg"
+  style="position:absolute;top:10px;right:50px;" />
+
+# Introduction
+Maine DEP has developed a robust stream classification model that is based on
+collecting stream invertebrates from "rock baskets" left in streams for about
+a month. They have also developed methods to assess water quality based on 
+comments of the algae community.  
+
+For GIS presentation in State of Casco Bay, it is convenient to have a simple
+file to import into GIS.  Here we generate that file.  This partially duplicates
+a file generated in Python.
+
+# Load Libraries
+```{r load_libraries}
+#library(readr)
+library(tidyverse)
+```
+
+# Load Data
+## Establish Folder References
+```{r folder_refs}
+sibfldnm <- 'Derived_Data'
+parent   <- dirname(getwd())
+sibling  <- file.path(parent,sibfldnm)
+fn <- "Biomonitoring_Samples_CB.csv"
+
+# dir.create(file.path(getwd(), 'figures'), showWarnings = FALSE)
+```
+
+DEP uses "NA" to indicate "Non Attainment" in the data.  By default, R
+interprets that as `NA`, meaning  missing data.  We need to address that in our
+code for reading the data.  WE also need to be careful in later analyses that
+R does not drop that value.  We considered changing the data label, but DEP
+uses "NA" consistently, and for simplicity of communications it is easiest if we
+retain the original designation.
+
+**Note that this data contains invertebrate, wetland, and algae sample data,
+including sometimes sharing the same site designations.**
+## Read the Data
+### Primary Sample Data
+```{r load_sample_data}
+the_data <- read_csv(file.path(sibling, fn), na = '') %>%
+  rename_with( ~ sub(' Class| Determination| ID', '', .x)) %>%
+  rename(Station = `Station Number`,
+         Date = `Sample Date`,
+         Type = `Sample Type`) %>%
+  mutate(Date = as.Date(Date, format = '%m/%d/%Y'),
+         Year = as.integer(format(Date, format = '%Y'))) %>%
+  relocate(Attained, .after = Final)
+```
+
+### Station Data
+```{r load_station_data}
+fn <- "Biomonitoring_Stations_CB.csv"
+station_data <- read_csv(file.path(sibling, fn), na = '') %>%
+select(-contains('FID')) %>%
+  select(-Sample_Typ) %>%
+  rename(Station_Name = Station,
+         Station = Station_Nu,
+         Drainage = Major_Drai,
+         Imperv = PctImperv)
+```
+
+#  Create Recent Data
+Note that this data contains invertebrate, wetland, and algae sample data,
+including sometimes sharing the same site designations.  
+
+We are only interested in "most recent" data that relates to the recent past.
+Here we restrict ourselves to sites from the last ten years of available data.
+Currently, that corresponds to 2009 through 2018.
+```{r}
+most_recent_year <- max(the_data$Year)
+earliest_recent =  most_recent_year - 10
+
+recent_data <- the_data %>%
+  filter(Type != 'WETLAND') %>%
+  mutate(Final_f = ordered(Final, levels = c('A', 'B', 'C', 'NA'))) %>%
+  group_by(Station) %>%
+  arrange(Date) %>%
+  mutate(keep = Sample == last(Sample)) %>%
+  filter(keep) %>%
+  filter(Year > earliest_recent) %>%
+  select(-keep, -Report) 
+```
+
+## Relate to Local Imperviousness
+```{r}
+recent_data <- recent_data %>%
+  mutate(local_imperv = station_data$Imperv[match(Station,
+                                                  station_data$Station)]) %>%
+  select(-Sample)
+```
+
+## Save As CSV 
+This "Most Recent" data is somewhat more convenient to work with that the one
+produced in Python, in the 'access_biomonitoring' repository.
+```{r}
+fn = 'Recent_Stream_Biomonitoring.csv'
+write_csv(recent_data, file.path(sibling, fn))
+```
