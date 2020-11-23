@@ -1,4 +1,4 @@
-Generate file of Most Recent Biomonitoring Results
+Generate File of Most Recent Biomonitoring Results
 ================
 Curtis C. Bohlen, Casco Bay Estuary Partnership
 11/19/2020
@@ -127,8 +127,9 @@ select(-contains('FID')) %>%
 Note that this data contains invertebrate, wetland, and algae sample
 data, including sometimes sharing the same site designations.
 
-We are only interested in “most recent” data that relates to the recent
-past. Here we restrict ourselves to sites from the last ten years of
+We are only interested in “most recent” invertebrate biomonitoting data.
+Further, we are interested only in data that relates to the recent past.
+Here we restrict ourselves to sites from the most recent ten years of
 available data. Currently, that corresponds to 2009 through 2018.
 
 ``` r
@@ -136,7 +137,7 @@ most_recent_year <- max(the_data$Year)
 earliest_recent =  most_recent_year - 10
 
 recent_data <- the_data %>%
-  filter(Type != 'WETLAND') %>%
+  filter(Type == 'MACROINVERTEBRATE') %>%
   mutate(Final_f = ordered(Final, levels = c('A', 'B', 'C', 'NA'))) %>%
   group_by(Station) %>%
   arrange(Date) %>%
