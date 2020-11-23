@@ -91,7 +91,6 @@ the_data <- read_csv(file.path(sibling, fn), na = '') %>%
          Year = as.integer(format(Date, format = '%Y'))) %>%
   relocate(Attained, .after = Final)
 ```
-
 ### Station Data
 ```{r load_station_data}
 fn <- "Biomonitoring_Stations_CB.csv"

@@ -1,0 +1,150 @@
+---
+title: "Attained Stream Class Related to Impervious Cover"
+author:  "Curtis C. Bohlen, Casco Bay Estuary Partnership"
+date: "11/19/2020"
+output:
+  github_document:
+    toc: true
+    fig_width: 7
+    fig_height: 5
+---
+
+<img
+  src="https://www.cascobayestuary.org/wp-content/uploads/2014/04/logo_sm.jpg"
+  style="position:absolute;top:10px;right:50px;" />
+
+# Introduction
+Maine DEP has developed a robust stream classification model that is based on
+collecting stream invertebrates from "rock baskets" left in streams for about
+a month. They have also developed methods to assess water quality based on 
+comments of the algae community.
+
+In this Notebook, we focus on generating a plot that emphasizes the connection
+between water quality and landuse.
+
+Our principal data is a letter grade ('A', 'B', 'C', 'NA') assigned to each site
+based on biomonitoring data. Our data on imperviousness is based only on 
+LOCAL imperviousness (in the local catchment) not on total upstream IC.
+ 
+# Load Libraries
+```{r load_libraries}
+library(tidyverse)
+library(emmeans)
+library(mblm)
+
+library(CBEPgraphics)
+load_cbep_fonts()
+theme_set(theme_cbep())
+```
+
+# Load Data
+## Establish Folder References
+```{r folder_refs}
+sibfldnm <- 'Derived_Data'
+parent   <- dirname(getwd())
+sibling  <- file.path(parent,sibfldnm)
+
+dir.create(file.path(getwd(), 'figures'), showWarnings = FALSE)
+```
+
+DEP uses "NA" to indicate "Non Attainment" in the data.  By default, R
+interprets that as `NA`, meaning  missing data.  We need to address that in our
+code for reading the data.  WE also need to be careful in later analyses that
+R does not drop that value.  We considered changing the data label, but DEP
+uses "NA" consistently, and for simplicity of communications it is easiest if we
+retain the original designation.
+
+**Note that this data contains invertebrate, wetland, and algae sample data,
+including sometimes sharing the same site designations.**
+
+## Read the Data
+### Recent Sample Data
+```{r load_sample_data}
+fn <- "Recent_Stream_Biomonitoring.csv"
+the_data <- read_csv(file.path(sibling, fn), na = '') %>%
+  mutate(Date = as.Date(Date, format = '%m/%d/%Y'),
+         Year = as.integer(format(Date, format = '%Y'))) %>%
+  relocate(Year, .after = Date) %>%
+  relocate(Attained, .after = Final) %>%
+  mutate(Final_o = ordered(Final, levels = c('NA', 'C', 'B', 'A'))) %>%
+  mutate(Final_f = factor(Final, levels = c('I', 'NA', 'C', 'B', 'A'))) %>%
+  relocate(c(Final_f, Final_o), .after = Final)
+```
+## Preliminary Plots
+```{r fig.width = 5, fig.height = 3}
+plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
+  geom_boxplot() +
+  ylab('Local  Imperviousness\n(Percent)') +
+  xlab('Attained Class')
+plt
+```
+
+```{r fig.width = 5, fig.height = 3}
+plt + 
+  geom_dotplot(binaxis='y', stackdir='center', binwidth = 1,
+               stackratio=1, dotsize=1.5)
+
+```
+
+The following is better, addressing heteroskedasctiicty, but it may be hard to
+explain to readers.
+```{r}
+plt + 
+stat_summary(fun.y=mean, geom="point", shape=18,
+                 size=3, color="red") +
+  scale_y_log10()
+```
+
+```{r}
+n_fun <- function(x){
+  return(data.frame(y = 55, label = paste0("n = ",length(x))))
+}
+plt +
+  stat_summary(fun.data = n_fun, geom = "text")
+```
+
+
+
+# Make Table
+```{r}
+the_data %>%
+  group_by(Final_f) %>%
+  summarize(avg = mean(local_imperv * 100) ,
+            med = median(local_imperv * 100),
+            sample = n(),
+            stdev = sd(local_imperv * 100) ,
+            stderr = stdev/sqrt(sample),
+            .groups = 'drop') %>%
+  knitr::kable(digits = c(0,1,1,1,3,3),
+               col.names = c('Achieved Class', 'Mean',
+                             'Median' , 'Sample', 'Std Dev', 'Std Err'),
+               caption = 'Imperviousness by Observed Class' )
+```
+
+
+# Direct Modelling
+A log transform addresses heteroskedasticity, and improves the model.
+```{r}
+the_lm <- lm(log(local_imperv) ~ Final_f, data = the_data)
+plot(the_lm)
+```
+```{r}
+anova(the_lm)
+summary(the_lm)
+```
+So, both 'NA' and 'A' are different from the reference level (here, 'I').
+Without turning to EMMEANS or another pairwise procedure, we can not determine
+other comparisons.
+
+
+```{r}
+(emm <- emmeans(the_lm, 'Final_f', type = 'response'))
+```
+
+```{r}
+pwpp(emm)
+```
+
+
+So, pairwise comparisons A, B, and I show distributions of IC different from NA.
+A is NEARLY different from I, B, and C.
