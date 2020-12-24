@@ -26,7 +26,7 @@ a month. They have also developed methods to assess water quality based on
 comments of the algae community.
 
 In this Notebook, we focus on generating a plot that emphasizes the connection
-between water quality and landuse.
+between water quality and land use.
 
 Our principal data is a letter grade ('A', 'B', 'C', 'NA') assigned to each site
 based on biomonitoring data. Our data on imperviousness is based only on 
@@ -78,7 +78,7 @@ the_data <- read_csv(file.path(sibling, fn), na = '') %>%
 ```
 
 # Preliminary Plots
-```{r fig.width = 5, fig.height = 3}
+```{r basic_boxplot, fig.width = 5, fig.height = 3}
 plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
   geom_boxplot() +
   ylab('Local  Imperviousness\n(Percent)') +
@@ -86,23 +86,24 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-```{r fig.width = 5, fig.height = 3}
+```{r mixed_box_and_dot, fig.width = 5, fig.height = 3}
 plt + 
   geom_dotplot(binaxis='y', stackdir='center', binwidth = 1,
                stackratio=1, dotsize=1.5)
 
 ```
 
-The following is better, addressing heteroskedasctiicty, but it may be hard to
-explain to readers.
-```{r}
+The following is better, addressing heteroskedasticity, but it may be hard to
+explain to readers, and it obscures how few samples we have in a few of the
+groups.
+```{r mixed_box_and_median}
 plt + 
 stat_summary(fun=mean, geom="point", shape=18,
                  size=3, color="red") +
   scale_y_log10()
 ```
 
-```{r}
+```{r box_with_sample_size}
 n_fun <- function(x){
   return(data.frame(y = 65, label = paste0("n = ",length(x))))
 }
@@ -112,7 +113,7 @@ plt +
 ```
 
 # Violin Plot
-```{r fig.width = 5, fig.height = 3}
+```{r violin_plot, fig.width = 5, fig.height = 3}
 plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
   geom_violin() +
   #stat_summary(fun=median, geom="point", shape=18,
@@ -120,10 +121,11 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
   ylab('Local  Imperviousness\n(Percent)') +
   xlab('Attained Class') +
   scale_y_log10()
+plt
 ```
 
 
-```{r}
+```{r violin_with_dots}
 n_fun <- function(x){
   return(data.frame(y = 2, label = paste0("n = ",length(x))))
 }
@@ -135,10 +137,54 @@ plt +
                fill = cbep_colors()[5])
 ```
 
+# Dot Plots
+```{r log_dotplot, fig.width = 5, fig.height = 3}
+n_fun <- function(x){
+  return(data.frame(y = 1.9, label = paste0("n = ",length(x))))
+}
+
+plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
+  #stat_summary(fun.data = n_fun, geom = "text") +
+  geom_dotplot(binaxis='y', stackdir='center', binwidth = .05,
+               stackratio=1, dotsize=2,
+               fill = cbep_colors()[5]) +
+
+  ylab('Local  Imperviousness\n(Percent)') +
+  xlab('Attained Class') +
+  scale_y_log10()
+
+plt
+```
+
+```{r dotplot, fig.width = 5, fig.height = 3}
+plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
+  
+  geom_dotplot(binaxis='y', stackdir='center', binwidth = 1,
+               stackratio=1, dotsize=2,
+               fill = cbep_colors()[5]) +
+
+  ylab('Local Imperviousness\n(Percent)') +
+  xlab('Attained Class') +
+  
+  theme_cbep(base_size = 14)
+
+plt
+ggsave('figures/dots.pdf', device=cairo_pdf, width = 5, height = 3)
+```
+
+```{r dotplot_with_sample_size, fig.width = 5, fig.height = 3}
+n_fun <- function(x){
+  return(data.frame(y = 65, label = paste0("n = ",length(x))))
+}
+plt +
+  stat_summary(fun.data = n_fun, geom = "text", size = 4)
+ggsave('figures/dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
+```
+
 
 # Make Table
 An alternative is to provide results in a table.
-```{r}
+```{r make_table}
 the_data %>%
   group_by(fct_rev(Final_f)) %>%
   summarize(avg = mean(local_imperv * 100) ,
@@ -156,7 +202,7 @@ the_data %>%
 
 # Direct Modelling
 A log transform addresses heteroskedasticity, and improves the model.
-```{r}
+```{r linear_model}
 the_lm <- lm(log(local_imperv) ~ Final_f, data = the_data)
 plot(the_lm)
 ```
@@ -169,7 +215,7 @@ We need to turn to EMMEANS or use another pairwise procedure, to determine
 other comparisons.
 
 
-```{r}
+```{r marginal_means}
 (emm <- emmeans(the_lm, 'Final_f', type = 'response'))
 ```
 

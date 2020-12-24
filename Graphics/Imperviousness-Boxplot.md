@@ -11,6 +11,7 @@ Curtis C. Bohlen, Casco Bay Estuary Partnership
           - [Recent Sample Data](#recent-sample-data)
   - [Preliminary Plots](#preliminary-plots)
   - [Violin Plot](#violin-plot)
+  - [Dot Plots](#dot-plots)
   - [Make Table](#make-table)
   - [Direct Modelling](#direct-modelling)
 
@@ -26,7 +27,7 @@ streams for about a month. They have also developed methods to assess
 water quality based on comments of the algae community.
 
 In this Notebook, we focus on generating a plot that emphasizes the
-connection between water quality and landuse.
+connection between water quality and land use.
 
 Our principal data is a letter grade (‘A’, ‘B’, ‘C’, ‘NA’) assigned to
 each site based on biomonitoring data. Our data on imperviousness is
@@ -114,7 +115,7 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-1-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/basic_boxplot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 plt + 
@@ -122,10 +123,11 @@ plt +
                stackratio=1, dotsize=1.5)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/mixed_box_and_dot-1.png" style="display: block; margin: auto;" />
 
-The following is better, addressing heteroskedasctiicty, but it may be
-hard to explain to readers.
+The following is better, addressing heteroskedasticity, but it may be
+hard to explain to readers, and it obscures how few samples we have in a
+few of the groups.
 
 ``` r
 plt + 
@@ -134,7 +136,7 @@ stat_summary(fun=mean, geom="point", shape=18,
   scale_y_log10()
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-3-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/mixed_box_and_median-1.png" style="display: block; margin: auto;" />
 
 ``` r
 n_fun <- function(x){
@@ -144,7 +146,7 @@ plt +
   stat_summary(fun.data = n_fun, geom = "text")
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-4-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/box_with_sample_size-1.png" style="display: block; margin: auto;" />
 
 # Violin Plot
 
@@ -156,7 +158,10 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
   ylab('Local  Imperviousness\n(Percent)') +
   xlab('Attained Class') +
   scale_y_log10()
+plt
 ```
+
+<img src="Imperviousness-Boxplot_files/figure-gfm/violin_plot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 n_fun <- function(x){
@@ -170,7 +175,64 @@ plt +
                fill = cbep_colors()[5])
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-6-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/violin_with_dots-1.png" style="display: block; margin: auto;" />
+
+# Dot Plots
+
+``` r
+n_fun <- function(x){
+  return(data.frame(y = 1.9, label = paste0("n = ",length(x))))
+}
+
+plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
+  #stat_summary(fun.data = n_fun, geom = "text") +
+  geom_dotplot(binaxis='y', stackdir='center', binwidth = .05,
+               stackratio=1, dotsize=2,
+               fill = cbep_colors()[5]) +
+
+  ylab('Local  Imperviousness\n(Percent)') +
+  xlab('Attained Class') +
+  scale_y_log10()
+
+plt
+```
+
+<img src="Imperviousness-Boxplot_files/figure-gfm/log_dotplot-1.png" style="display: block; margin: auto;" />
+
+``` r
+plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
+  
+  geom_dotplot(binaxis='y', stackdir='center', binwidth = 1,
+               stackratio=1, dotsize=2,
+               fill = cbep_colors()[5]) +
+
+  ylab('Local Imperviousness\n(Percent)') +
+  xlab('Attained Class') +
+  
+  theme_cbep(base_size = 14)
+
+plt
+```
+
+<img src="Imperviousness-Boxplot_files/figure-gfm/dotplot-1.png" style="display: block; margin: auto;" />
+
+``` r
+ggsave('figures/dots.pdf', device=cairo_pdf, width = 5, height = 3)
+```
+
+``` r
+n_fun <- function(x){
+  return(data.frame(y = 65, label = paste0("n = ",length(x))))
+}
+plt +
+  stat_summary(fun.data = n_fun, geom = "text", size = 4)
+```
+
+<img src="Imperviousness-Boxplot_files/figure-gfm/dotplot_with_sample_size-1.png" style="display: block; margin: auto;" />
+
+``` r
+ggsave('figures/dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
+```
 
 # Make Table
 
@@ -210,7 +272,7 @@ the_lm <- lm(log(local_imperv) ~ Final_f, data = the_data)
 plot(the_lm)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-8-2.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-8-3.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-8-4.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-1.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-2.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-3.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-4.png" style="display: block; margin: auto;" />
 
 ``` r
 anova(the_lm)
@@ -267,7 +329,7 @@ to determine other comparisons.
 pwpp(emm)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-11-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
 
 So, pairwise comparisons A, B, and I show distributions of IC different
 from NA. A is NEARLY different from I, B, and C.
