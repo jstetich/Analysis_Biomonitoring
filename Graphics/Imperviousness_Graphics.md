@@ -115,7 +115,7 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/basic_boxplot-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/basic_boxplot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 plt + 
@@ -123,7 +123,7 @@ plt +
                stackratio=1, dotsize=1.5)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/mixed_box_and_dot-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/mixed_box_and_dot-1.png" style="display: block; margin: auto;" />
 
 The following is better, addressing heteroskedasticity, but it may be
 hard to explain to readers, and it obscures how few samples we have in a
@@ -136,7 +136,7 @@ stat_summary(fun=mean, geom="point", shape=18,
   scale_y_log10()
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/mixed_box_and_median-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/mixed_box_and_median-1.png" style="display: block; margin: auto;" />
 
 ``` r
 n_fun <- function(x){
@@ -146,7 +146,7 @@ plt +
   stat_summary(fun.data = n_fun, geom = "text")
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/box_with_sample_size-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/box_with_sample_size-1.png" style="display: block; margin: auto;" />
 
 # Violin Plot
 
@@ -161,7 +161,7 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/violin_plot-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/violin_plot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 n_fun <- function(x){
@@ -175,7 +175,7 @@ plt +
                fill = cbep_colors()[5])
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/violin_with_dots-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/violin_with_dots-1.png" style="display: block; margin: auto;" />
 
 # Dot Plots
 
@@ -197,7 +197,7 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/log_dotplot-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/log_dotplot-1.png" style="display: block; margin: auto;" />
 
 ``` r
 plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
@@ -214,10 +214,10 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
 plt
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/dotplot-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/dotplot-1.png" style="display: block; margin: auto;" />
 
 ``` r
-ggsave('figures/dots.pdf', device=cairo_pdf, width = 5, height = 3)
+ggsave('figures/class_and_imperviousness_dots.pdf', device=cairo_pdf, width = 5, height = 3)
 ```
 
 ``` r
@@ -228,10 +228,10 @@ plt +
   stat_summary(fun.data = n_fun, geom = "text", size = 4)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/dotplot_with_sample_size-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/dotplot_with_sample_size-1.png" style="display: block; margin: auto;" />
 
 ``` r
-ggsave('figures/dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
+ggsave('figures/class_and_imperviousness_dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
 ```
 
 # Make Table
@@ -272,7 +272,7 @@ the_lm <- lm(log(local_imperv) ~ Final_f, data = the_data)
 plot(the_lm)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-1.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-2.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-3.png" style="display: block; margin: auto;" /><img src="Imperviousness-Boxplot_files/figure-gfm/linear_model-4.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/linear_model-1.png" style="display: block; margin: auto;" /><img src="Imperviousness_Graphics_files/figure-gfm/linear_model-2.png" style="display: block; margin: auto;" /><img src="Imperviousness_Graphics_files/figure-gfm/linear_model-3.png" style="display: block; margin: auto;" /><img src="Imperviousness_Graphics_files/figure-gfm/linear_model-4.png" style="display: block; margin: auto;" />
 
 ``` r
 anova(the_lm)
@@ -329,7 +329,7 @@ to determine other comparisons.
 pwpp(emm)
 ```
 
-<img src="Imperviousness-Boxplot_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
+<img src="Imperviousness_Graphics_files/figure-gfm/unnamed-chunk-2-1.png" style="display: block; margin: auto;" />
 
 So, pairwise comparisons A, B, and I show distributions of IC different
 from NA. A is NEARLY different from I, B, and C.

@@ -169,7 +169,7 @@ plt <- ggplot(the_data, aes(x = Final_f, y = local_imperv * 100)) +
   theme_cbep(base_size = 14)
 
 plt
-ggsave('figures/dots.pdf', device=cairo_pdf, width = 5, height = 3)
+ggsave('figures/class_and_imperviousness_dots.pdf', device=cairo_pdf, width = 5, height = 3)
 ```
 
 ```{r dotplot_with_sample_size, fig.width = 5, fig.height = 3}
@@ -178,7 +178,7 @@ n_fun <- function(x){
 }
 plt +
   stat_summary(fun.data = n_fun, geom = "text", size = 4)
-ggsave('figures/dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
+ggsave('figures/class_and_imperviousness_dots_w_sample.pdf', device=cairo_pdf, width = 5, height = 3)
 ```
 
 
